@@ -33,7 +33,20 @@ In this assignment, the goal is to create a standalone Python Project  that inte
 
  2. Installation
 
-To run the Resume Builder Django application, follow these steps:
+To run it, follow these steps:
+Installation Steps-->
+
+1) Clone The Repository
+git clone https://github.com/LightMeta/GmailServicesAutomation.git
+ 
+2) Change Directory
+cd GmailServicesAutomation
+
+3) Install requirements
+pip3 install -r requirements.txt
+
+4) Run the code
+python3 main.py
 
 Prerequisites
 - Python 3.x
