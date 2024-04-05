@@ -1,0 +1,18 @@
+{
+  "rule_name": "Naukri Alerts",
+  "rule_description": "All mails from Naukri.com",
+  "rule_type": "All",
+  "rules": [
+    {
+      "field": "From",
+      "predicate": "contains",
+      "value": "naukri"
+    }
+  ],
+  "actions": [
+    {
+      "action_type": "mark",
+      "action_value": "read"
+    }
+  ]
+}

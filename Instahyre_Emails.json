@@ -1,0 +1,18 @@
+{
+  "rule_name": "Instahyre Emails",
+  "rule_description": "Instahyre",
+  "rule_type": "Any",
+  "rules": [
+    {
+      "field": "Message",
+      "predicate": "does not contain",
+      "value": "zebra"
+    }
+  ],
+  "actions": [
+    {
+      "action_type": "mark",
+      "action_value": "unread"
+    }
+  ]
+}
