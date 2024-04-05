@@ -1,6 +1,8 @@
 # GmailServicesAutomation
 
  Please go through doc OR https://drive.google.com/file/d/1vNOFlKPA-qin1E2XUYt2yzEeJajZOobw/view?usp=sharing IN CASE OF DOUBTS.
+
+
 Fetch the Emails and take actions based on User Predicates.
 GCP GmaiL API Search Functions 
 
