@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 import sqlite3, json
-from .GmailBotInsertData import main_insert
+from .GmailBotInsertData import main_insert,authenticate_gmail,create_connection_db
 from pydantic import BaseModel
 from typing import List
 from fastapi import FastAPI, UploadFile, File
+from googleapiclient.discovery import build
 
 
 #########################################################################################################################################################
@@ -30,13 +31,9 @@ class RuleModel(BaseModel):
 #                                                        FUNCTIONS COMING IN USE                                                                        #
 #########################################################################################################################################################
 
-def create_connection():
-    connection = sqlite3.connect("email_database.db")
-    cursor = connection.cursor()
-    return connection,cursor
 
 def fetch_all_rows():
-    conn,curr = create_connection()
+    conn,curr = create_connection_db()
     curr.execute("Select * FROM emails")
     rows = curr.fetchall()
     return rows
@@ -94,6 +91,42 @@ async def create_rule(rule_data: RuleModel):
 
     return {"message": f"Rule '{rule_data.rule_name}' saved as {file_name}"}
 
+
+
+
+def mark( ids , action_value ):
+
+        creds = authenticate_gmail()
+        service = build('gmail', 'v1', credentials=creds)
+
+        for each_id in ids:
+            if action_value.lower() == "read":
+                body = {
+                    'removeLabelIds': ['UNREAD']
+                }
+
+                service.users().messages().modify( userId='me', id=each_id, body=body).execute()
+                print(f"Marked email with ID: {each_id} as read")
+            elif action_value.lower() == "unread":
+                body = {
+                    'addLabelIds': ['UNREAD']
+                }
+
+                service.users().messages().modify( userId='me', id=each_id, body=body).execute()
+                print(f"Marked email with ID: {each_id} as unread")
+            else:
+                print(f"Invalid action: {action_value}. No action taken.")
+
+def move( ids, action_value ):
+        creds = authenticate_gmail()
+        service = build('gmail', 'v1', credentials=creds)
+        for each_ids in ids:
+            label_id = action_value.upper()
+            service.users().messages().modify(userId='me', id=each_ids,
+                                          body={'addLabelIds': [label_id]}).execute()
+
+            print(f"Moved email with ID: {each_ids} to folder: {action_value}")
+
 @app.post("/EXECUTE_RULE")
 async def execute_rule(file: UploadFile = File(...)):
     '''Reading the file
@@ -111,8 +144,12 @@ async def execute_rule(file: UploadFile = File(...)):
     scenario = rules[0]['predicate']
     to_search = rules[0]['value']
 
+    actions = json_data['actions']
+    action_type = actions[0]['action_type']
+    action_value = actions[0]['action_value']
+
+
     full_data = fetch_all_rows()
-    # import pdb; pdb.set_trace()
 
     # Result email , onky those emails that have passed the rules will be saved
     result_emails = []
@@ -127,28 +164,25 @@ async def execute_rule(file: UploadFile = File(...)):
         email_text =each_mail[3]
         date_time = each_mail[4]
 
-        print('\n')
-        print(sender,to_search,rule_type)
-        print('\n')
-        # check condition
-        try:
-            check_list = [sender, subject, email_text]
-            if rule_type.lower() == 'all':
-                if (scenario == "does not contain") and (scenario == "does not equal"):
-                    for each_var in check_list:
+
+        check_list = [sender, subject, email_text]
+        if rule_type.lower():
+            if (scenario == "does not contain") and (scenario == "does not equal"):
+                for each_var in check_list:
+                    if each_var:
                         if to_search.lower() not in each_var.lower():
                             result_emails.append(each_mail)
                             id_.append(id)
-                else:
-                    for each_var in check_list:
+            else:
+                for each_var in check_list:
+                    if each_var:
                         if to_search.lower() in each_var.lower():
                             result_emails.append(each_mail)
                             id_.append(id)
-        except:
-            pass
-               
+    print(id_)
+    if action_type.lower() == 'move':
+        move(id_,action_value)
+    else:
+        mark(id_, action_value)
+
     return {"result":result_emails}
-
-
-            # service.users().messages().modify(userId='me', id=email_id, body={
-                # 'removeLabelIds': ['UNREAD'], 'addLabelIds': []}).execute()

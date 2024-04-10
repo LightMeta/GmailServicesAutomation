@@ -162,5 +162,5 @@ def main_insert():
     return "SUCCESSFULLY INSERTED DATA"
 
 
-main_insert()
+
 
